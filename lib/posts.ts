@@ -39,17 +39,11 @@ export async function getAllPosts(): Promise<Post[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | undefined> {
-  const pathname = `${POSTS_PREFIX}${slug}.json`;
-  const blobs = await list({ prefix: pathname, limit: 1 });
+  // slug는 URL에서 이미 decode된 상태일 수 있으므로 한 번 더 안전하게 decode
+  const decodedSlug = decodeURIComponent(slug);
 
-  const blob = blobs.blobs[0];
-  if (!blob) return undefined;
-
-  const res = await fetch(blob.url);
-  if (!res.ok) return undefined;
-
-  const data = (await res.json()) as Post;
-  return data;
+  const posts = await getAllPosts();
+  return posts.find((p) => p.slug === decodedSlug);
 }
 
 export async function createPost(input: {
