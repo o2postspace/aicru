@@ -1,4 +1,4 @@
-import { list, put, get } from "@vercel/blob";
+import { list, put } from "@vercel/blob";
 
 export interface Post {
   id: string;
@@ -40,11 +40,10 @@ export async function getAllPosts(): Promise<Post[]> {
 
 export async function getPostBySlug(slug: string): Promise<Post | undefined> {
   const pathname = `${POSTS_PREFIX}${slug}.json`;
-  const { blob } = await get(pathname);
+  const blobs = await list({ prefix: pathname, limit: 1 });
 
-  if (!blob) {
-    return undefined;
-  }
+  const blob = blobs.blobs[0];
+  if (!blob) return undefined;
 
   const res = await fetch(blob.url);
   if (!res.ok) return undefined;
