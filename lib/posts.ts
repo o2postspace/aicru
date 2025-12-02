@@ -39,17 +39,8 @@ export async function getAllPosts(): Promise<Post[]> {
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | undefined> {
-  const pathname = `${POSTS_PREFIX}${slug}.json`;
-  const blobs = await list({ prefix: POSTS_PREFIX });
-
-  const blob = blobs.blobs.find((b) => b.pathname === pathname);
-  if (!blob) return undefined;
-
-  const res = await fetch(blob.url);
-  if (!res.ok) return undefined;
-
-  const data = (await res.json()) as Post;
-  return data;
+  const posts = await getAllPosts();
+  return posts.find((p) => p.slug === slug);
 }
 
 export async function createPost(input: {
