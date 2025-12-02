@@ -40,9 +40,9 @@ export async function getAllPosts(): Promise<Post[]> {
 
 export async function getPostBySlug(slug: string): Promise<Post | undefined> {
   const pathname = `${POSTS_PREFIX}${slug}.json`;
-  const blobs = await list({ prefix: pathname, limit: 1 });
+  const blobs = await list({ prefix: POSTS_PREFIX });
 
-  const blob = blobs.blobs[0];
+  const blob = blobs.blobs.find((b) => b.pathname === pathname);
   if (!blob) return undefined;
 
   const res = await fetch(blob.url);
