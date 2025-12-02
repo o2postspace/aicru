@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { getPostBySlug } from "../../../lib/posts";
 import { MarkdownViewer } from "../../../components/MarkdownViewer";
 
+// Blob에 새 글이 추가된 뒤 곧바로 상세 페이지에서 보이도록 동적 렌더링
+export const dynamic = "force-dynamic";
+
 interface PostPageProps {
   params: { slug: string };
 }

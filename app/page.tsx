@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getAllPosts } from "../lib/posts";
 
+// Blob에서 항상 최신 글을 읽어오기 위해 정적이 아닌 동적 렌더링 강제
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const posts = await getAllPosts();
 
@@ -52,6 +55,3 @@ export default async function HomePage() {
     </section>
   );
 }
-
-
-
