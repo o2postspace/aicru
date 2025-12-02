@@ -1,0 +1,396 @@
+{
+  "name": "My workflow 25",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "content",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "content",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "dd3a2d92-7d88-4b08-8794-e88c8eb374e6",
+      "name": "On form submission",
+      "webhookId": "c1c17981-2667-4bef-b35f-8294ad34b9ab"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "issue-comments",
+          "mode": "list",
+          "cachedResultName": "issue-comments"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        -48
+      ],
+      "id": "a5cc200b-5f9a-4da9-aa90-983769b3962c",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "rHZwFRjbJOyvajL7",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        192
+      ],
+      "id": "4d0dd020-9795-4f38-a197-4610e37b39a0",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZXQoPZpJhy8QTeln",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ★ 1) 업로드된 파일의 binary 데이터 꺼내기\nconst item = items[0];\n\n// binary 안의 키(= content 같은 이름)를 자동으로 가져옴\nconst binKey = Object.keys(item.binary)[0]; // 예: 'content'\n\n// base64 → utf8 문자열로 변환\nconst base64 = item.binary[binKey].data;\nconst rawStr = Buffer.from(base64, 'base64').toString('utf8');\n\n// ★ 2) 문자열 → 실제 JSON 배열로 파싱\nconst arr = JSON.parse(rawStr);\n\n// ★ 3) topic 고정 이름\nconst TOPIC = 'yoon_sunbin_kangaroo';\n\n// ★ 4) 각 댓글을 item으로 변환\nreturn arr.map(r => ({\n  json: {\n    id: r.id,\n    topic: TOPIC,\n    text: r.text,\n    timestamp: r.timestamp,\n    stance: r.stance_label,\n    is_abusive: r.toxicity?.is_abusive ?? false,\n    is_hate: r.toxicity?.is_hate ?? false,\n    is_black_white: r.toxicity?.is_black_white_thinking ?? false,\n    is_generalization: r.toxicity?.is_generalization ?? false,\n    industry: r.industry_keywords?.[0] ?? null,\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ea712ea1-62b5-4947-b0f8-d16a750b6ccc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        208
+      ],
+      "id": "85f6266b-7289-4b78-a39e-3586087dec33",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "너는 온라인 이슈를 균형있게 분석해주는 '갈등 큐레이션 AI 에이전트'다.\n\n사용자가 이슈에 대해 질문하면, 관련 댓글 데이터를 Pinecone에서 가져와\n- 입장 분포\n- 혐오/일반화/흑백논리 비율\n- 핵심 논점 3~5개\n- 양 측 입장 요약\n- 언어적 문제점\n- 오해 지점과 건설적 대화 방향\n\n을 아래 형식에 맞춰 정리하라:\n\n1. 한 줄 요약\n2. 전체 여론 분위기\n3. 주요 쟁점 3-5개\n4. 입장별 핵심 논점 (비판/옹호)\n5. 공격적/혐오적 프레이밍 분석\n6. 균형 잡힌 관점 제안",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        432
+      ],
+      "id": "fdd4e65a-fdea-43ef-adf9-b2dbedcb16be",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        672
+      ],
+      "id": "2ce1b867-2553-49a8-8add-9ad77eb93133",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZXQoPZpJhy8QTeln",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "this is comment for issue",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "issue-comments",
+          "mode": "list",
+          "cachedResultName": "issue-comments"
+        },
+        "topK": 40,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        704
+      ],
+      "id": "ecec4645-4c42-49c7-b074-82a328c9655e",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        "pineconeApi": {
+          "id": "rHZwFRjbJOyvajL7",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        848
+      ],
+      "id": "18af0938-7ade-4af7-9406-1019a12ffd29",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZXQoPZpJhy8QTeln",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"summary\": \"string\",\n  \"key_points\": [\"string\"],\n  \"stances\": {\n    \"negative\": {\n      \"summary\": \"string\",\n      \"arguments\": [\"string\"]\n    },\n    \"positive\": {\n      \"summary\": \"string\",\n      \"arguments\": [\"string\"]\n    },\n    \"neutral\": {\n      \"summary\": \"string\",\n      \"arguments\": [\"string\"]\n    }\n  },\n  \"toxicity_analysis\": {\n    \"abusive_ratio\": 0.0,\n    \"black_white_ratio\": 0.0,\n    \"generalization_ratio\": 0.0,\n    \"notes\": [\"string\"]\n  },\n  \"balanced_recommendations\": {\n    \"check_points\": [\"string\"],\n    \"common_misunderstandings\": [\"string\"],\n    \"conversation_tips\": [\"string\"]\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        784
+      ],
+      "id": "332b2196-9c86-4950-9f15-edcc4ade57be",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        432
+      ],
+      "id": "128c9626-0ee5-489f-a304-51d2ae91b687",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=다음을 읽고 중립적이고 깔끔한 칼럼을 작성해라 \n\n요약은 다음과 같다.\n{{ $json.output.summary }}\n\n키포인트는 다음과 같다.\n{{ $json.output.key_points }}\n\n부정적인 측면은 \n\n요약은 다음과 같다. \n{{ $json.output.stances.negative.summary }}\n주장은 다음과 같다.\n{{ $json.output.stances.negative.arguments }}\n\n긍정적인 측면 요약은 다음과 같다.\n{{ $json.output.stances.positive.summary }}\n\n주장은 다음과 같다. \n{{ $json.output.stances.positive.arguments }}\n\n중립적인 측면은 \n요약은 다음과 같다. \n{{ $json.output.stances.neutral.summary }}\n\n주장은 다음과 같다 \n{{ $json.output.stances.neutral.arguments }}\n\nabusive ratio는 {{ $json.output.toxicity_analysis.abusive_ratio }}\n흑백논리 비율은 {{ $json.output.toxicity_analysis.black_white_ratio }}\n일반화 비율은 {{ $json.output.toxicity_analysis.generalization_ratio }}\n\n그거에 대한 note는 다음과 같다. \n{{ $json.output.toxicity_analysis.notes }}\n\n체크 포인트는 다음과 같다. \n{{ $json.output.balanced_recommendations.check_points }}\n\n잘못된 주장들은 다음과 같다. \n{{ $json.output.balanced_recommendations.common_misunderstandings }}\n\n그래서 그게에 대한 tip은 다음과 같다 \n{{ $json.output.balanced_recommendations.conversation_tips }}\n\n이제 이 글을 칼럼 형식으로 이슈를 중립적으로 정리해",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        768,
+        432
+      ],
+      "id": "9d0d87d8-958d-4848-83af-64db220dc0fc",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        576
+      ],
+      "id": "e96e3fe8-4d4c-4a28-ae12-17d7fb483098",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZXQoPZpJhy8QTeln",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c27f4c23-7c79-4981-8ebe-09c98bf8510e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "OvBg8n5nCFHbMqEE",
+  "tags": []
+}
