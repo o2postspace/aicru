@@ -37,4 +37,8 @@
   "exclude": [
     "node_modules"
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> e17978d (Initial commit: AI 큐레이터 칼럼 사이트)
